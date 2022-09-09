@@ -59,7 +59,10 @@ const TasksList = props => {
     }
   };
 
-
+  const handleClick = () => {
+    window.location.reload();
+    //window.location.href = window.location.href;
+  };
   const [guidlines, setguidlines] = useState('');
   const [implementation, setimplementation] = useState('');
   const [impact, setimpact] = useState('');
@@ -95,6 +98,7 @@ const TasksList = props => {
         
           <Breadcrumbs title="Tasks" breadcrumbItem="Task List" />
           {/* Render Breadcrumbs */}
+          
           <Row>
             <Col lg={12}>
             {/* <button className="btn btn-primary">Add New Category</button> */}
@@ -278,7 +282,7 @@ const TasksList = props => {
                     ))}
             <CardBody>
              
-            <MDBTable striped responsive className="forw">
+            <MDBTable striped responsive="true" className="forw">
       <MDBTableHead className="head">
         <tr>
         <th scope='col'></th>
@@ -296,7 +300,7 @@ const TasksList = props => {
             <MDBCheckbox></MDBCheckbox>
           </th>
           <td>
-            <div className='align-items-center'>
+            <div className='align-items-center colwid'>
               {/* <img
                 src='https://mdbootstrap.com/img/new/avatars/8.jpg'
                 alt=''
@@ -322,7 +326,9 @@ const TasksList = props => {
             </MDBBadge>
           </td>
           <td>
-          {/* <p className='fw-normal mb-1'>{x.Image}</p> */}
+          {/* <div className='colwid1'>
+          <p className='fw-normal mb-1'>{x.Image}</p>
+          </div> */}
           </td>
           {/* <td>
             <MDBBadge color='success' pill>

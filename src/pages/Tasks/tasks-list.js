@@ -68,13 +68,14 @@ const TasksList = (props) => {
     }
   };
   const handleClick = () => {
-    window.location.reload();  // recommended
-    //window.location.href = window.location.href;  // not recommended
+    window.location.reload();
+    //window.location.href = window.location.href;
   };
   const [name, setname] = useState("");
   const [description, setdescription] = useState("");
   const [image, setimage] = useState("");
   const [status, setstatus] = useState("");
+
   async function addData() {
     const { data, error } = await supabase
       .from("Categories")
@@ -182,7 +183,6 @@ const TasksList = (props) => {
                     ></input>
                     <br></br>
                     <label className="col-md-3 col-form-label">
-                      {" "}
                       Parent Category
                     </label>
                     <div className="col-md-12">
@@ -284,12 +284,12 @@ const TasksList = (props) => {
                       <input
                         className="form-control"
                         type="text"
+                        name={name}
                         value={name}
                         onChange={(e) => setname(e.target.value)}
                       ></input>
                       <br></br>
                       <label className="col-md-3 col-form-label">
-                        {" "}
                         Parent Category
                       </label>
                       <div className="col-md-12">
@@ -312,7 +312,7 @@ const TasksList = (props) => {
                       </label>
                       <textarea
                         className="form-control"
-                        value={description}
+                        name={description}
                         onChange={(e) => setdescription(e.target.value)}
                       ></textarea>
                       <br></br>
@@ -327,7 +327,7 @@ const TasksList = (props) => {
                       <input
                         className="form-control"
                         type="text"
-                        value={status}
+                        name={status}
                         onChange={(e) => setstatus(e.target.value)}
                       ></input>
                       <br></br>
@@ -360,7 +360,7 @@ const TasksList = (props) => {
               </Col>
             ))}
             <CardBody>
-              <MDBTable striped table-responsive className="forw">
+              <MDBTable striped table-responsive="true" className="forw">
                 <MDBTableHead className="head">
                   <tr>
                     <th scope="col"></th>
