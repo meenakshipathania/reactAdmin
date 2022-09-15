@@ -1,17 +1,22 @@
 /* eslint-disable */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "jquery/dist/jquery.min.js";
+import "datatables.net-dt/js/dataTables.dataTables";
+import "datatables.net-dt/css/jquery.dataTables.min.css";
+import $ from "jquery";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 // import { isEmpty, map, size } from "lodash"
 // import { useInsert } from 'react-supabase'
 import { Link, withRouter } from "react-router-dom";
 import SweetAlert from "react-bootstrap-sweetalert";
-import {
-  MDBTable,
-  MDBTableHead,
-  MDBTableBody,
-  MDBCheckbox,
-} from "mdb-react-ui-kit";
+// import {
+//   MDBTable,
+//   MDBTableHead,
+//   MDBTableBody,
+//   MDBCheckbox,
+// } from "mdb-react-ui-kit";
 // import classNames from "classnames"
 import { Row, Col, Card, CardBody, Modal } from "reactstrap";
 //Import Breadcrumb
@@ -29,6 +34,8 @@ const TasksList = (props) => {
   const [modal, setmodal] = useState(false);
   // const { tasks, onGetTasks } = props;
   const [text, Settext] = useState([]);
+  const [text1, Settext1] = useState([]);
+  const [idData, SetidData] = useState([]);
   const [Category, setCategory] = useState([]);
   const [upData, setUpData] = useState([]);
   const [basic, setbasic] = useState(false);
@@ -53,6 +60,9 @@ const TasksList = (props) => {
   async function myApiCall() {
     let { data, error } = await supabase.from("Categories").select("*");
     Settext(data);
+    $(document).ready(function () {
+      $("#example").DataTable();
+    });
     // console.log(data, error);
   }
   useEffect(async () => {
@@ -75,22 +85,34 @@ const TasksList = (props) => {
   const [description, setdescription] = useState("");
   const [image, setimage] = useState("");
   const [status, setstatus] = useState("");
+  const [slug, setslug] = useState("");
 
   async function addData() {
     const { data, error } = await supabase
       .from("Categories")
       .insert([
-        { Name: name, Description: description, Image: image, Status: status },
+        { Name: name, Description: description, Image: image, Status: status, Slug:slug },
       ]);
   }
   useEffect(async () => {
   }, []);
 
+
+  const form = useRef();
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const contact = { name, description, image, status};
+  };
+
   async function updateData(id) {
+    // let { data1, error1 } = await supabase.from("Categories").select("*").eq("Id", id);
+    // SetidData(upData.filter((idData) => idData.Id != id));
+    // Settext1(data);
+    // console.log("data1", data1, error1);
     const { data, error } = await supabase
       .from("Categories")
       .update([
-        { Name: name, Description: description, Image: image, Status: status },
+        { Name: name, Description: description, Image: image, Status: status, Slug:slug },
       ])
       .eq("Id", id);
     setUpData(upData.filter((upData) => upData.Id != id));
@@ -99,6 +121,16 @@ const TasksList = (props) => {
     // addData()
   }, []);
 
+
+  // async function myApiCall1(id) {
+  //   let { data, error } = await supabase.from("Categories").select("*").eq("Id", id);
+  //   SetidData(upData.filter((idData) => idData.Id != id));;
+  //   Settext1(data);
+  //   console.log("data1", data, error);
+  // }
+  // useEffect(async () => {
+  //   myApiCall1();
+  // }, []);
   // const recentTasks = tasks.find(task => task.title === "Recent Tasks")
 
   return (
@@ -131,6 +163,7 @@ const TasksList = (props) => {
           </SweetAlert>
         ) : null}
         <Row>
+         
           <Col lg={12}>
             {/* <button className="btn btn-primary">Add New Category</button> */}
             <Col sm={6} md={4} xl={12}>
@@ -172,7 +205,7 @@ const TasksList = (props) => {
                 </div>
                 <div className="modal-body">
                   <form>
-                    <label className="col-md-3 col-form-label">
+                    <label className="col-md-4 col-form-label">
                       Category Name
                     </label>
                     <input
@@ -182,13 +215,16 @@ const TasksList = (props) => {
                       onChange={(e) => setname(e.target.value)}
                     ></input>
                     <br></br>
-                    <label className="col-md-3 col-form-label">
+                    <label className="col-md-4 col-form-label">
                       Parent Category
                     </label>
-                    <div className="col-md-12">
+                    {/* <div className="col-md-12"> */}
                       <select className="form-control">
-                        <option>---Select---</option>
-                        <option>Homepage</option>
+                      <option>---Select---</option>
+                        {text.map((x)=> (
+                        <option value={x.Id}>{x.Name}</option>
+                        ))}
+                        {/* <option>Homepage</option>
                         <option>Navigation</option>
                         <option>Search</option>
                         <option>Product List</option>
@@ -196,9 +232,9 @@ const TasksList = (props) => {
                         <option>Cart</option>
                         <option>Checkout</option>
                         <option>Account</option>
-                        <option>Mobile</option>
+                        <option>Mobile</option> */}
                       </select>
-                    </div>
+                    {/* </div> */}
                     <br></br>
                     <label className="col-md-3 col-form-label">
                       Description
@@ -223,6 +259,16 @@ const TasksList = (props) => {
                       type="text"
                       value={status}
                       onChange={(e) => setstatus(e.target.value)}
+                    ></input>
+                    <br></br>
+                    <label className="col-md-3 col-form-label">
+                      Slug
+                    </label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      value={slug}
+                      onChange={(e) => setslug(e.target.value)}
                     ></input>
                     <br></br>
                   </form>
@@ -277,42 +323,33 @@ const TasksList = (props) => {
                     </button>
                   </div>
                   <div className="modal-body">
-                    <form>
-                      <label className="col-md-3 col-form-label">
+                    <form ref={form} onSubmit={handleSubmit}>
+                      <label className="col-md-4 col-form-label">
                         Category Name
                       </label>
                       <input
                         className="form-control"
                         type="text"
-                        name={name}
                         value={name}
                         onChange={(e) => setname(e.target.value)}
                       ></input>
                       <br></br>
-                      <label className="col-md-3 col-form-label">
+                      <label className="col-md-4 col-form-label">
                         Parent Category
                       </label>
-                      <div className="col-md-12">
                         <select className="form-control">
-                          <option>---Select---</option>
-                          <option>Homepage</option>
-                          <option>Navigation</option>
-                          <option>Search</option>
-                          <option>Product List</option>
-                          <option>Product Page</option>
-                          <option>Cart</option>
-                          <option>Checkout</option>
-                          <option>Account</option>
-                          <option>Mobile</option>
+                        <option>---Select---</option>
+                        {text.map((x)=> (
+                        <option value={x.Id}>{x.Name}</option>
+                        ))}
                         </select>
-                      </div>
                       <br></br>
                       <label className="col-md-3 col-form-label">
                         Description
                       </label>
                       <textarea
                         className="form-control"
-                        name={description}
+                        value={description}
                         onChange={(e) => setdescription(e.target.value)}
                       ></textarea>
                       <br></br>
@@ -327,7 +364,7 @@ const TasksList = (props) => {
                       <input
                         className="form-control"
                         type="text"
-                        name={status}
+                        value={status}
                         onChange={(e) => setstatus(e.target.value)}
                       ></input>
                       <br></br>
@@ -359,14 +396,78 @@ const TasksList = (props) => {
                 </Modal>
               </Col>
             ))}
-            <CardBody>
+              <CardBody>
+              <table id="example" className="table table-striped table-bordered table-responsive" style={{ width: "100%" }}
+              >
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    {/* <th>Image</th> */}
+                    <th>Description</th>
+                    <th style={{width : "65.7812px"}}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {text.map((x) => (
+                    <tr>
+                      <td>
+                        <input type="checkbox"></input>
+                      </td>
+                      <td>{x.Id}</td>
+                      <td>{x.Name}</td>
+                      <td>{x.Status}</td>
+                      {/* <td>{x.Image}</td> */}
+                      <td>{x.Description}</td>
+                      <td>
+                        <button
+                          className="btn"
+                          color="link"
+                          rounded="true"
+                          size="sm"
+                          onClick={() => {
+                            tog();
+                          }}
+                          data-toggle="modal"
+                          data-target="#myModal"
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button
+                          className="btn"
+                          color="link"
+                          rounded="true"
+                          size="sm"
+                          onClick={() => deleteData(x.Id)}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                {/* <tfoot>
+            <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Office</th>
+                <th>Age</th>
+                <th>Start date</th>
+                <th>Salary</th>
+            </tr>
+        </tfoot> */}
+              </table>
+            </CardBody>
+            {/* <CardBody>
               <MDBTable striped table-responsive="true" className="forw">
                 <MDBTableHead className="head">
                   <tr>
                     <th scope="col"></th>
                     <th scope="col">Name</th>
                     <th scope="col">Description</th>
-                    <th scope="col">Image</th>
+                    {/* <th scope="col">Image</th>
                     <th scope="col">Status</th>
                     <th scope="col">Actions</th>
                   </tr>
@@ -385,34 +486,34 @@ const TasksList = (props) => {
                 style={{ width: '45px', height: '45px' }}
                 className='rounded-circle'
               /> 
-              {/* <div className='ms-3'> */}
-                      {/* <p className='fw-bold mb-1'>{x.id}</p> */}
-                      {/* <p className='text-muted mb-0'>john.doe@gmail.com</p> */}
+              {/* <div className='ms-3'> 
+                      {/* <p className='fw-bold mb-1'>{x.id}</p> 
+                      {/* <p className='text-muted mb-0'>john.doe@gmail.com</p> 
                       {/* </div>
             </div>
-          </td> */}
+          </td> 
                       <td>
                         <p className="fw-normal mb-1">{x.Name}</p>
-                        {/* <p className='text-muted mb-0'>IT department</p> */}
+                        {/* <p className='text-muted mb-0'>IT department</p> 
                       </td>
                       <td>
                         <p className="fw-normal mb-1">{x.Description}</p>
-                        {/* <p className='text-muted mb-0'>IT department</p> */}
+                        {/* <p className='text-muted mb-0'>IT department</p> 
                       </td>
                       <td>
-                        {/* <p className='fw-normal mb-1'>{x.Image}</p> */}
-                        {/* <p className='text-muted mb-0'>IT department</p> */}
+                        {/* <p className='fw-normal mb-1'>{x.Image}</p> 
+                        {/* <p className='text-muted mb-0'>IT department</p> 
                       </td>
                       <td>
                         <p className="fw-normal mb-1">{x.Status}</p>
-                        {/* <p className='text-muted mb-0'>IT department</p> */}
+                        {/* <p className='text-muted mb-0'>IT department</p> 
                       </td>
                       {/* <td>
             <MDBBadge color='success' pill>
               Active
             </MDBBadge>
-          </td> */}
-                      {/* <td>Senior</td> */}
+          </td> 
+                      {/* <td>Senior</td> 
                       <td>
                         <button
                           className="btn"
@@ -442,7 +543,7 @@ const TasksList = (props) => {
                   ))}
                 </MDBTableBody>
               </MDBTable>
-            </CardBody>
+            </CardBody> */}
           </Col>
           {basic ? (
             <SweetAlert

@@ -125,7 +125,7 @@ const SidebarContent = props => {
             <li>
               <Link to="/tasks-list" className="waves-effect">
                 <i className="mdi mdi-calendar-check"></i>
-                <span>{props.t("Tasks")}</span>
+                <span>{props.t("Category")}</span>
               </Link>
               {/* <ul className="sub-menu">
                 {/* <li><Link to="/tasks-list">{props.t("Task List")}</Link></li>
