@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "jquery/dist/jquery.min.js";
 import "datatables.net-dt/js/dataTables.dataTables";
@@ -18,11 +18,12 @@ import SweetAlert from "react-bootstrap-sweetalert";
 //   MDBCheckbox,
 // } from "mdb-react-ui-kit";
 // import classNames from "classnames"
-import { Row, Col, Card, CardBody, Modal } from "reactstrap";
+import { Row, Col, CardBody, Modal } from "reactstrap";
 //Import Breadcrumb
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 // import ReactApexChart from "react-apexcharts"
 import { getTasks } from "../../store/tasks/actions";
+
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -32,10 +33,10 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const TasksList = (props) => {
   const [modal_standard, setmodal_standard] = useState(false);
   const [modal, setmodal] = useState(false);
+  const [EditId, setId] = useState(0);
+  const [dynamic_description, setdynamic_description] = useState("")
   // const { tasks, onGetTasks } = props;
   const [text, Settext] = useState([]);
-  const [text1, Settext1] = useState([]);
-  const [idData, SetidData] = useState([]);
   const [Category, setCategory] = useState([]);
   const [upData, setUpData] = useState([]);
   const [basic, setbasic] = useState(false);
@@ -43,13 +44,23 @@ const TasksList = (props) => {
   const [basic2, setbasic2] = useState(false);
   const [success_dlg, setsuccess_dlg] = useState(false);
   const [error_dlg, seterror_dlg] = useState(false);
+  const [name, setname] = useState("");
+  const [description, setdescription] = useState("");
+  const [image, setimage] = useState("");
+  const [status, setstatus] = useState("");
+  const [slug, setslug] = useState("");
 
   function removeBodyCss() {
     document.body.classList.add("no_padding");
   }
+  
   function tog_standard() {
     setmodal_standard(!modal_standard);
     removeBodyCss();
+    setname(" ");
+    setdescription(" ");
+    setstatus(" ");
+    setslug(" ");
   }
 
   function tog() {
@@ -58,7 +69,10 @@ const TasksList = (props) => {
   }
 
   async function myApiCall() {
-    let { data, error } = await supabase.from("Categories").select("*");
+    let { data, error } = await supabase
+      .from("Categories")
+      .select("*")
+      .order("Id", { ascending: true });
     Settext(data);
     $(document).ready(function () {
       $("#example").DataTable();
@@ -77,60 +91,58 @@ const TasksList = (props) => {
       console.log("error", error);
     }
   };
+
   const handleClick = () => {
     window.location.reload();
     //window.location.href = window.location.href;
   };
-  const [name, setname] = useState("");
-  const [description, setdescription] = useState("");
-  const [image, setimage] = useState("");
-  const [status, setstatus] = useState("");
-  const [slug, setslug] = useState("");
+  function handleEdit(id) {
+    setId(id);
+    for (let i = 0; i < text.length; i++) {
+      if (text[i].Id === id) {
+        setname(text[i].Name);
+        setdescription(text[i].Description);
+        setstatus(text[i].Status);
+        setslug(text[i].Slug);
+      }
+    }
+    tog();
+  }
 
   async function addData() {
     const { data, error } = await supabase
       .from("Categories")
       .insert([
-        { Name: name, Description: description, Image: image, Status: status, Slug:slug },
+        {
+          Name: name,
+          Description: description,
+          Image: image,
+          Status: status,
+          Slug: slug,
+        },
       ]);
   }
-  useEffect(async () => {
-  }, []);
-
-
-  const form = useRef();
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const contact = { name, description, image, status};
-  };
+  useEffect(async () => {}, []);
 
   async function updateData(id) {
-    // let { data1, error1 } = await supabase.from("Categories").select("*").eq("Id", id);
-    // SetidData(upData.filter((idData) => idData.Id != id));
-    // Settext1(data);
-    // console.log("data1", data1, error1);
     const { data, error } = await supabase
       .from("Categories")
       .update([
-        { Name: name, Description: description, Image: image, Status: status, Slug:slug },
+        {
+          Name: name,
+          Description: description,
+          Image: image,
+          Status: status,
+          Slug: slug,
+        },
       ])
-      .eq("Id", id);
+      .eq("Id", EditId);
     setUpData(upData.filter((upData) => upData.Id != id));
   }
   useEffect(async () => {
-    // addData()
+    // updateData(5);
   }, []);
 
-
-  // async function myApiCall1(id) {
-  //   let { data, error } = await supabase.from("Categories").select("*").eq("Id", id);
-  //   SetidData(upData.filter((idData) => idData.Id != id));;
-  //   Settext1(data);
-  //   console.log("data1", data, error);
-  // }
-  // useEffect(async () => {
-  //   myApiCall1();
-  // }, []);
   // const recentTasks = tasks.find(task => task.title === "Recent Tasks")
 
   return (
@@ -142,7 +154,7 @@ const TasksList = (props) => {
         {success_dlg ? (
           <SweetAlert
             success
-            title={dynamic_title}
+            title={dynamic_title1}
             onConfirm={() => {
               setsuccess_dlg(false);
             }}
@@ -163,7 +175,6 @@ const TasksList = (props) => {
           </SweetAlert>
         ) : null}
         <Row>
-         
           <Col lg={12}>
             {/* <button className="btn btn-primary">Add New Category</button> */}
             <Col sm={6} md={4} xl={12}>
@@ -219,12 +230,12 @@ const TasksList = (props) => {
                       Parent Category
                     </label>
                     {/* <div className="col-md-12"> */}
-                      <select className="form-control">
+                    <select className="form-control">
                       <option>---Select---</option>
-                        {text.map((x)=> (
+                      {text.map((x) => (
                         <option value={x.Id}>{x.Name}</option>
-                        ))}
-                        {/* <option>Homepage</option>
+                      ))}
+                      {/* <option>Homepage</option>
                         <option>Navigation</option>
                         <option>Search</option>
                         <option>Product List</option>
@@ -233,7 +244,7 @@ const TasksList = (props) => {
                         <option>Checkout</option>
                         <option>Account</option>
                         <option>Mobile</option> */}
-                      </select>
+                    </select>
                     {/* </div> */}
                     <br></br>
                     <label className="col-md-3 col-form-label">
@@ -261,9 +272,7 @@ const TasksList = (props) => {
                       onChange={(e) => setstatus(e.target.value)}
                     ></input>
                     <br></br>
-                    <label className="col-md-3 col-form-label">
-                      Slug
-                    </label>
+                    <label className="col-md-3 col-form-label">Slug</label>
                     <input
                       className="form-control"
                       type="text"
@@ -289,7 +298,7 @@ const TasksList = (props) => {
                     className="btn btn-primary waves-effect waves-light"
                     onClick={() => {
                       tog_standard();
-                      addData(); 
+                      addData();
                       setbasic(true);
                     }}
                   >
@@ -323,7 +332,7 @@ const TasksList = (props) => {
                     </button>
                   </div>
                   <div className="modal-body">
-                    <form ref={form} onSubmit={handleSubmit}>
+                    <form>
                       <label className="col-md-4 col-form-label">
                         Category Name
                       </label>
@@ -337,12 +346,12 @@ const TasksList = (props) => {
                       <label className="col-md-4 col-form-label">
                         Parent Category
                       </label>
-                        <select className="form-control">
+                      <select className="form-control">
                         <option>---Select---</option>
-                        {text.map((x)=> (
-                        <option value={x.Id}>{x.Name}</option>
+                        {text.map((x) => (
+                          <option value={x.Id}>{x.Name}</option>
                         ))}
-                        </select>
+                      </select>
                       <br></br>
                       <label className="col-md-3 col-form-label">
                         Description
@@ -365,6 +374,7 @@ const TasksList = (props) => {
                         className="form-control"
                         type="text"
                         value={status}
+                        // onChange={handleChange}
                         onChange={(e) => setstatus(e.target.value)}
                       ></input>
                       <br></br>
@@ -386,7 +396,7 @@ const TasksList = (props) => {
                       className="btn btn-primary waves-effect waves-light"
                       onClick={() => {
                         tog();
-                        updateData(x.Id);
+                        updateData(x);
                         setbasic1(true);
                       }}
                     >
@@ -396,8 +406,11 @@ const TasksList = (props) => {
                 </Modal>
               </Col>
             ))}
-              <CardBody>
-              <table id="example" className="table table-striped table-bordered table-responsive" style={{ width: "100%" }}
+            <CardBody>
+              <table
+                id="example"
+                className="table table-striped table-bordered table-responsive"
+                style={{ width: "100%" }}
               >
                 <thead>
                   <tr>
@@ -407,7 +420,7 @@ const TasksList = (props) => {
                     <th>Status</th>
                     {/* <th>Image</th> */}
                     <th>Description</th>
-                    <th style={{width : "65.7812px"}}>Actions</th>
+                    <th style={{ width: "65.7812px" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -428,7 +441,7 @@ const TasksList = (props) => {
                           rounded="true"
                           size="sm"
                           onClick={() => {
-                            tog();
+                            handleEdit(x.Id);
                           }}
                           data-toggle="modal"
                           data-target="#myModal"
@@ -440,7 +453,10 @@ const TasksList = (props) => {
                           color="link"
                           rounded="true"
                           size="sm"
-                          onClick={() => deleteData(x.Id)}
+                          onClick={() => {
+                            deleteData(x.Id);
+                            setbasic2(true);
+                          }}
                         >
                           <i className="fas fa-trash"></i>
                         </button>
@@ -460,96 +476,13 @@ const TasksList = (props) => {
         </tfoot> */}
               </table>
             </CardBody>
-            {/* <CardBody>
-              <MDBTable striped table-responsive="true" className="forw">
-                <MDBTableHead className="head">
-                  <tr>
-                    <th scope="col"></th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Description</th>
-                    {/* <th scope="col">Image</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Actions</th>
-                  </tr>
-                </MDBTableHead>
-                <MDBTableBody style={{ backgroundColor: "white" }}>
-                  {text.map((x) => (
-                    <tr>
-                      <th scope="col">
-                        <MDBCheckbox></MDBCheckbox>
-                      </th>
-                      {/* <td>
-            <div className='align-items-center'>
-              {/* <img
-                src='https://mdbootstrap.com/img/new/avatars/8.jpg'
-                alt=''
-                style={{ width: '45px', height: '45px' }}
-                className='rounded-circle'
-              /> 
-              {/* <div className='ms-3'> 
-                      {/* <p className='fw-bold mb-1'>{x.id}</p> 
-                      {/* <p className='text-muted mb-0'>john.doe@gmail.com</p> 
-                      {/* </div>
-            </div>
-          </td> 
-                      <td>
-                        <p className="fw-normal mb-1">{x.Name}</p>
-                        {/* <p className='text-muted mb-0'>IT department</p> 
-                      </td>
-                      <td>
-                        <p className="fw-normal mb-1">{x.Description}</p>
-                        {/* <p className='text-muted mb-0'>IT department</p> 
-                      </td>
-                      <td>
-                        {/* <p className='fw-normal mb-1'>{x.Image}</p> 
-                        {/* <p className='text-muted mb-0'>IT department</p> 
-                      </td>
-                      <td>
-                        <p className="fw-normal mb-1">{x.Status}</p>
-                        {/* <p className='text-muted mb-0'>IT department</p> 
-                      </td>
-                      {/* <td>
-            <MDBBadge color='success' pill>
-              Active
-            </MDBBadge>
-          </td> 
-                      {/* <td>Senior</td> 
-                      <td>
-                        <button
-                          className="btn"
-                          color="link"
-                          rounded="true"
-                          size="sm"
-                          type="button"
-                          onClick={() => {
-                            tog();
-                          }}
-                          data-toggle="modal"
-                          data-target="#myModal"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="btn"
-                          color="link"
-                          rounded="true"
-                          size="sm"
-                          onClick={() => {deleteData(x.Id); setbasic2(true);}}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </MDBTableBody>
-              </MDBTable>
-            </CardBody> */}
           </Col>
           {basic ? (
             <SweetAlert
               title="Your Entry is Saved Successfully!!!"
               onConfirm={() => {
-                setbasic(false); handleClick();
+                setbasic(false);
+                handleClick();
               }}
             />
           ) : null}
@@ -558,7 +491,8 @@ const TasksList = (props) => {
             <SweetAlert
               title="Your Entry is Updated Successfully!!!"
               onConfirm={() => {
-                setbasic1(false); handleClick();
+                setbasic1(false);
+                handleClick();
               }}
             />
           ) : null}
@@ -566,7 +500,8 @@ const TasksList = (props) => {
             <SweetAlert
               title="Your Entry is Deleted Successfully!!!"
               onConfirm={() => {
-                setbasic2(false); handleClick();
+                setbasic2(false);
+                handleClick();
               }}
             />
           ) : null}

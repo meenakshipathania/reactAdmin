@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef} from "react";
+import React, { useState, useEffect} from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "jquery/dist/jquery.min.js";
 import "datatables.net-dt/js/dataTables.dataTables";
 import "datatables.net-dt/css/jquery.dataTables.min.css";
 import $ from "jquery";
 
-// import PropTypes from "prop-types";
+import PropTypes from "prop-types";
 import { connect } from "react-redux";
 // import { isEmpty, map, size } from "lodash";
 import { Link, withRouter } from "react-router-dom";
 import SweetAlert from "react-bootstrap-sweetalert";
+import { decode } from 'base64-arraybuffer'
 
 // import {
 //   MDBBadge,
@@ -28,7 +29,8 @@ import {
 } from "reactstrap";
 //Import Breadcrumb
 import Breadcrumbs from "../../components/Common/Breadcrumb";
-
+import { getTasks } from "../../store/tasks/actions";
+import formData from 'form-data';
 // import ReactApexChart from "react-apexcharts";
 
 import { createClient } from "@supabase/supabase-js";
@@ -37,13 +39,16 @@ const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const TasksList = (props) => {
+const CheckList = (props) => {
   const [modal_standard, setmodal_standard] = useState(false);
   const [modal, setmodal] = useState(false);
   // const { tasks, onGetTasks } = props;
   const [text, Settext] = useState([]);
   const [text1, Settext1] = useState([]);
+  const [EditId, setId] = useState(0);
+  const [getImage, setImage] = useState(0);
   const [Category, setCategory] = useState([]);
+  const [dynamic_description, setdynamic_description] = useState("")
   const [upData, setUpData] = useState([]);
   const [basic, setbasic] = useState(false);
   const [basic1, setbasic1] = useState(false);
@@ -51,6 +56,11 @@ const TasksList = (props) => {
   const [success_dlg, setsuccess_dlg] = useState(false);
   const [error_dlg, seterror_dlg] = useState(false);
   const [dynamic_title, setdynamic_title] = useState("")
+  const [guidlines, setguidlines] = useState("");
+  const [implementation, setimplementation] = useState("");
+  const [impact, setimpact] = useState("");
+  // const [image, setimage] = useState("");
+  const [description, setdescription] = useState("");
 
 
   function removeBodyCss() {
@@ -59,6 +69,10 @@ const TasksList = (props) => {
   function tog_standard() {
     setmodal_standard(!modal_standard);
     removeBodyCss();
+    setguidlines("");
+    setimplementation("");
+    setimpact("");
+    setdescription("")
   }
 
   function tog() {
@@ -80,9 +94,6 @@ const TasksList = (props) => {
   async function myApiCall1() {
     let { data, error } = await supabase.from("Categories").select("*");
     Settext1(data);
-    $(document).ready(function () {
-      $("#example").DataTable();
-    });
     // console.log(data, error);
   }
   useEffect(async () => {
@@ -102,12 +113,18 @@ const TasksList = (props) => {
     window.location.reload();
     //window.location.href = window.location.href;
   };
-  const [guidlines, setguidlines] = useState("");
-  const [implementation, setimplementation] = useState("");
-  const [impact, setimpact] = useState("");
-  const [image, setimage] = useState("");
-  const [description, setdescription] = useState("");
-  const [Pcategory, setPcategory] = useState("");
+  function handleEdit(id) {
+    setId(id);
+    for (let i = 0; i < text.length; i++) {
+      if (text[i].Id === id) {
+        setguidlines(text[i].Guidlines);
+        setimplementation(text[i].Implementation);
+        setimpact(text[i].Impact);
+        setdescription(text[i].Description)
+      }
+    }
+    tog();
+  }
 
   async function addData() {
     const { data, error } = await supabase.from("Checklist").insert([
@@ -115,22 +132,14 @@ const TasksList = (props) => {
         Guidlines: guidlines,
         Implementation: implementation,
         Impact: impact,
-        Image: image,
+        Image: getImage.data.publicUrl,
         Description: description,
-        category_id: Pcategory,
       },
     ]);
   }
   useEffect(async () => {
     // addData()
   }, []);
-
-
-  const form = useRef();
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const contact = {guidlines, implementation, impact, description, image };
-  };
 
   async function updateData(id) {
     const { data, error } = await supabase
@@ -140,17 +149,32 @@ const TasksList = (props) => {
           Guidlines: guidlines,
           Implementation: implementation,
           Impact: impact,
-          Image: image,
+          Image: getImage,
           Description: description,
-          category_id: Pcategory,
         },
       ])
-      .eq("Id", id);
+      .eq("Id", EditId);
     setUpData(upData.filter((upData) => upData.Id != id));
   }
   useEffect(async () => {
     // addData()
   }, []);
+
+ 
+async function bucketdata(file){
+  const { data, error } = await supabase.storage
+  .from('images')
+  .upload(`${file.name}`,file, decode('base64'),{ 
+    contentType: 'image/png',
+  })
+  setImage(supabase.storage.from('images').getPublicUrl(`${file.name}`))
+  // console.log(setImage)
+  // console.log(data, error);
+  // console.log(file)
+}
+useEffect(async () => {
+  // bucketdata()
+}, []);
 
   return (
     <>
@@ -166,7 +190,7 @@ const TasksList = (props) => {
               setsuccess_dlg(false);
             }}
           >
-            {/* {dynamic_description} */}
+            {dynamic_description}
           </SweetAlert>
         ) : null}
 
@@ -178,7 +202,7 @@ const TasksList = (props) => {
               seterror_dlg(false);
             }}
           >
-            {/* {dynamic_description} */}
+            {dynamic_description}
           </SweetAlert>
         ) : null}
         <Row>
@@ -234,18 +258,14 @@ const TasksList = (props) => {
                     <label className="col-md-4 col-form-label">
                       Parent Category
                     </label>
-                    <div className="col-md-12">
                       <select
                         className="form-control"
-                        value={Pcategory}
-                        onChange={(e) => setPcategory(e.target.value)}
                       >
                         <option>---Select---</option>
                         {text1.map((x)=> (
                         <option value={x.Id}>{x.Name}</option>
                         ))}
                       </select>
-                    </div>
                     <br></br>
                     <label className="col-md-3 col-form-label">
                       Implementation
@@ -269,8 +289,7 @@ const TasksList = (props) => {
                     <input
                       className="form-control"
                       type="file"
-                      value={image}
-                      onChange={(e) => setimage(e.target.value)}
+                      onChange={(e) => bucketdata(e.target.files[0])}
                     ></input>
                     <br></br>
                     <label className="col-md-3 col-form-label">
@@ -311,7 +330,7 @@ const TasksList = (props) => {
             </Col>
             {text.map((x) => (
               <Col sm={6} md={4} xl={12}>
-                <Modal
+                <Modal style={{opacity:"999", height:"100%"}} fade={false}
                   isOpen={modal}
                   toggle={() => {
                     tog();
@@ -334,72 +353,62 @@ const TasksList = (props) => {
                     </button>
                   </div>
                   <div className="modal-body">
-                    <form>
-                      <label className="col-md-4 col-form-label">
-                        Guidlines
-                      </label>
-                      <input
+                  <form>
+                    <label className="col-md-3 col-form-label">Guidlines</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      value={guidlines}
+                      onChange={(e) => setguidlines(e.target.value)}
+                    ></input>
+                    <br></br>
+                    <label className="col-md-4 col-form-label">
+                      Parent Category
+                    </label>
+                      <select
                         className="form-control"
-                        type="text"
-                        value={guidlines}
-                        onChange={(e) => setguidlines(e.target.value)}
-                      ></input>
-                      <br></br>
-                      <label className="col-md-4 col-form-label">
-                        Implementation
-                      </label>
-                      <input
-                        className="form-control"
-                        type="text"
-                        value={implementation}
-                        onChange={(e) => setimplementation(e.target.value)}
-                      ></input>
-                      <br></br>
-                      <label className="col-md-4 col-form-label">
-                        Impact
-                      </label>
-                      <input
-                        className="form-control"
-                        type="text"
-                        value={impact}
-                        onChange={(e) => setimpact(e.target.value)}
-                      ></input>
-                      <br></br>
-                      <label className="col-md-4 col-form-label">
-                        Parent Category
-                      </label>
-                        <select className="form-control">
+                      >
                         <option>---Select---</option>
-                        {text.map((x)=> (
+                        {text1.map((x)=> (
                         <option value={x.Id}>{x.Name}</option>
                         ))}
-                        </select>
-                      <br></br>
-                      <label className="col-md-3 col-form-label">
-                        Description
-                      </label>
-                      <textarea
-                        className="form-control"
-                        value={description}
-                        onChange={(e) => setdescription(e.target.value)}
-                      ></textarea>
-                      <br></br>
-                      <label className="col-md-3 col-form-label">Image</label>
-                      <input
-                        className="form-control"
-                        type="file"
-                        onChange={(e) => setimage(e.target.value)}
-                      ></input>
-                      <br></br>
-                      {/* <label className="col-md-3 col-form-label"> Status</label>
-                      <input
-                        className="form-control"
-                        type="text"
-                        value={status}
-                        onChange={(e) => setstatus(e.target.value)}
-                      ></input>
-                      <br></br> */}
-                    </form>
+                      </select>
+                    <br></br>
+                    <label className="col-md-3 col-form-label">
+                      Implementation
+                    </label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      value={implementation}
+                      onChange={(e) => setimplementation(e.target.value)}
+                    ></input>
+                    <br></br>
+                    <label className="col-md-3 col-form-label">Impact</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      value={impact}
+                      onChange={(e) => setimpact(e.target.value)}
+                    ></input>
+                    <br></br>
+                    <label className="col-md-3 col-form-label"> Image</label>
+                    <input
+                      className="form-control"
+                      type="file"
+                      // onChange={(e) => setimage(e.target.value)}
+                    ></input>
+                    <br></br>
+                    <label className="col-md-3 col-form-label">
+                      Description
+                    </label>
+                    <textarea
+                      className="form-control"
+                      value={description}
+                      onChange={(e) => setdescription(e.target.value)}
+                    ></textarea>
+                    <br></br>
+                  </form>
                   </div>
                   <div className="modal-footer">
                     <button
@@ -417,7 +426,7 @@ const TasksList = (props) => {
                       className="btn btn-primary waves-effect waves-light"
                       onClick={() => {
                         tog();
-                        updateData(x.Id);
+                        updateData(x);
                         setbasic1(true);
                       }}
                     >
@@ -430,7 +439,7 @@ const TasksList = (props) => {
             <CardBody>
               <table
                 id="example"
-                class="table table-striped table-bordered table-responsive"
+                className="table table-striped table-bordered table-responsive"
                 style={{ width: "100%" }}
               >
                 <thead>
@@ -439,7 +448,7 @@ const TasksList = (props) => {
                     <th>Guidlines</th>
                     <th>Implementation</th>
                     <th>Impact</th>
-                    {/* <th>Image</th> */}
+                    <th>Category_Id</th>
                     <th>Description</th>
                     <th style={{width: "11%"}}>Actions</th>
                   </tr>
@@ -453,7 +462,7 @@ const TasksList = (props) => {
                       <td>{x.Guidlines}</td>
                       <td>{x.Implementation}</td>
                       <td>{x.Impact}</td>
-                      {/* <td>{x.Image}</td> */}
+                      <td>{x.category_id}</td>
                       <td>{x.Description}</td>
                       <td>
                         <button
@@ -462,7 +471,7 @@ const TasksList = (props) => {
                           rounded="true"
                           size="sm"
                           onClick={() => {
-                            tog();
+                            handleEdit(x.Id);
                           }}
                           data-toggle="modal"
                           data-target="#myModal"
@@ -474,7 +483,7 @@ const TasksList = (props) => {
                           color="link"
                           rounded="true"
                           size="sm"
-                          onClick={() => deleteData(x.Id)}
+                          onClick={() => {deleteData(x.Id); setbasic2(true);}}
                         >
                           <i className="fas fa-trash"></i>
                         </button>
@@ -528,4 +537,21 @@ const TasksList = (props) => {
   );
 };
 
-export default connect()(withRouter(TasksList));
+CheckList.propTypes = {
+  tasks: PropTypes.array,
+  onGetTasks: PropTypes.func,
+};
+
+const mapStateToProps = ({ tasks }) => ({
+  tasks: tasks.tasks,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  onGetTasks: () => dispatch(getTasks()),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouter(CheckList));
+// export default connect()(withRouter(CheckList));
