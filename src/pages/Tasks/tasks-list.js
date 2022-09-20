@@ -11,6 +11,7 @@ import { connect } from "react-redux";
 // import { useInsert } from 'react-supabase'
 import { Link, withRouter } from "react-router-dom";
 import SweetAlert from "react-bootstrap-sweetalert";
+import { decode } from 'base64-arraybuffer'
 // import {
 //   MDBTable,
 //   MDBTableHead,
@@ -34,6 +35,7 @@ const TasksList = (props) => {
   const [modal_standard, setmodal_standard] = useState(false);
   const [modal, setmodal] = useState(false);
   const [EditId, setId] = useState(0);
+  const [getImage, setImage] = useState(0);
   const [dynamic_description, setdynamic_description] = useState("")
   // const { tasks, onGetTasks } = props;
   const [text, Settext] = useState([]);
@@ -61,6 +63,7 @@ const TasksList = (props) => {
     setdescription(" ");
     setstatus(" ");
     setslug(" ");
+    setimage("")
   }
 
   function tog() {
@@ -104,6 +107,7 @@ const TasksList = (props) => {
         setdescription(text[i].Description);
         setstatus(text[i].Status);
         setslug(text[i].Slug);
+        setimage(text[i].Image)
       }
     }
     tog();
@@ -116,13 +120,15 @@ const TasksList = (props) => {
         {
           Name: name,
           Description: description,
-          Image: image,
+          Image: getImage.data.publicUrl,
           Status: status,
           Slug: slug,
         },
       ]);
   }
-  useEffect(async () => {}, []);
+  useEffect(async () => {
+    
+  }, []);
 
   async function updateData(id) {
     const { data, error } = await supabase
@@ -131,7 +137,7 @@ const TasksList = (props) => {
         {
           Name: name,
           Description: description,
-          Image: image,
+          Image: getImage.data.publicUrl,
           Status: status,
           Slug: slug,
         },
@@ -141,6 +147,21 @@ const TasksList = (props) => {
   }
   useEffect(async () => {
     // updateData(5);
+  }, []);
+
+  async function bucketdata(file){
+    const { data, error } = await supabase.storage
+    .from('category')
+    .upload(`${file.name}`,file, decode('base64'),{ 
+      contentType: 'image/png',
+    })
+    setImage(supabase.storage.from('category').getPublicUrl(`${file.name}`))
+    // console.log(setImage)
+    // console.log(data, error);
+    // console.log(file)
+  }
+  useEffect(async () => {
+    // bucketdata()
   }, []);
 
   // const recentTasks = tasks.find(task => task.title === "Recent Tasks")
@@ -261,7 +282,7 @@ const TasksList = (props) => {
                       className="form-control"
                       type="file"
                       value={image}
-                      onChange={(e) => setimage(e.target.value)}
+                      onChange={(e) => bucketdata(e.target.files[0])}
                     ></input>
                     <br></br>
                     <label className="col-md-3 col-form-label"> Status</label>
@@ -366,7 +387,7 @@ const TasksList = (props) => {
                       <input
                         className="form-control"
                         type="file"
-                        onChange={(e) => setimage(e.target.value)}
+                        onChange={(e) => bucketdata(e.target.files[0])}
                       ></input>
                       <br></br>
                       <label className="col-md-3 col-form-label"> Status</label>
@@ -414,13 +435,13 @@ const TasksList = (props) => {
               >
                 <thead>
                   <tr>
-                    <th></th>
-                    <th>Id</th>
-                    <th>Name</th>
-                    <th>Status</th>
+                    <th style={{ width: "10%" }}></th>
+                    <th style={{ width: "12%" }}>Id</th>
+                    <th style={{ width: "18%" }}>Name</th>
+                    <th style={{ width: "17%" }}>Status</th>
                     {/* <th>Image</th> */}
-                    <th>Description</th>
-                    <th style={{ width: "65.7812px" }}>Actions</th>
+                    <th style={{ width: "26%" }}>Description</th>
+                    <th style={{ width: "17%" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>

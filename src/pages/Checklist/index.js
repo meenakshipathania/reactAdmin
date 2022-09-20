@@ -59,7 +59,7 @@ const CheckList = (props) => {
   const [guidlines, setguidlines] = useState("");
   const [implementation, setimplementation] = useState("");
   const [impact, setimpact] = useState("");
-  // const [image, setimage] = useState("");
+  const [image, setimage] = useState("");
   const [description, setdescription] = useState("");
 
 
@@ -72,7 +72,8 @@ const CheckList = (props) => {
     setguidlines("");
     setimplementation("");
     setimpact("");
-    setdescription("")
+    setdescription("");
+    setimage("")
   }
 
   function tog() {
@@ -120,7 +121,8 @@ const CheckList = (props) => {
         setguidlines(text[i].Guidlines);
         setimplementation(text[i].Implementation);
         setimpact(text[i].Impact);
-        setdescription(text[i].Description)
+        setdescription(text[i].Description);
+        setimage(text[i].Image)
       }
     }
     tog();
@@ -149,7 +151,7 @@ const CheckList = (props) => {
           Guidlines: guidlines,
           Implementation: implementation,
           Impact: impact,
-          Image: getImage,
+          Image: getImage.data.publicUrl,
           Description: description,
         },
       ])
@@ -396,7 +398,7 @@ useEffect(async () => {
                     <input
                       className="form-control"
                       type="file"
-                      // onChange={(e) => setimage(e.target.value)}
+                      onChange={(e) => bucketdata(e.target.files[0])}
                     ></input>
                     <br></br>
                     <label className="col-md-3 col-form-label">
