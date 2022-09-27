@@ -30,7 +30,6 @@ import {
 //Import Breadcrumb
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import { getTasks } from "../../store/tasks/actions";
-import formData from 'form-data';
 // import ReactApexChart from "react-apexcharts";
 
 import { createClient } from "@supabase/supabase-js";
@@ -61,6 +60,7 @@ const CheckList = (props) => {
   const [impact, setimpact] = useState("");
   const [image, setimage] = useState("");
   const [description, setdescription] = useState("");
+  const [category, setcategory] = useState("");
 
 
   function removeBodyCss() {
@@ -114,6 +114,7 @@ const CheckList = (props) => {
     window.location.reload();
     //window.location.href = window.location.href;
   };
+
   function handleEdit(id) {
     setId(id);
     for (let i = 0; i < text.length; i++) {
@@ -136,6 +137,7 @@ const CheckList = (props) => {
         Impact: impact,
         Image: getImage.data.publicUrl,
         Description: description,
+        category_id: category
       },
     ]);
   }
@@ -153,6 +155,7 @@ const CheckList = (props) => {
           Impact: impact,
           Image: getImage.data.publicUrl,
           Description: description,
+          category_id: category
         },
       ])
       .eq("Id", EditId);
@@ -171,13 +174,28 @@ async function bucketdata(file){
   })
   setImage(supabase.storage.from('images').getPublicUrl(`${file.name}`))
   // console.log(setImage)
-  // console.log(data, error);
   // console.log(file)
 }
 useEffect(async () => {
   // bucketdata()
 }, []);
 
+async function handleFileInput(e) {
+  // handle validations
+  let file = e.target.files[0];
+  if (file.size >= 1 * 1024 * 1024) {
+    alert( "File size cannot exceed more than 1MB");
+  } else {
+    bucketdata(file);
+  }
+}
+
+function getOption() {
+  let selectElement = document.querySelector('#select');
+  let output = selectElement.value;
+  // document.querySelector('.output').textContent = output;
+  console.log(output)
+}
   return (
     <>
       <div className="page-content">
@@ -222,7 +240,7 @@ useEffect(async () => {
                   data-toggle="modal"
                   data-target="#myModal"
                 >
-                  Add New Category
+                  Add New Checklist
                 </button>
               </div>
               <Modal
@@ -262,6 +280,9 @@ useEffect(async () => {
                     </label>
                       <select
                         className="form-control"
+                        id="select"
+                        value={category}
+                        onChange={(e) => setcategory(e.target.value)}
                       >
                         <option>---Select---</option>
                         {text1.map((x)=> (
@@ -291,7 +312,7 @@ useEffect(async () => {
                     <input
                       className="form-control"
                       type="file"
-                      onChange={(e) => bucketdata(e.target.files[0])}
+                      onInput={(e) => handleFileInput(e)}
                     ></input>
                     <br></br>
                     <label className="col-md-3 col-form-label">
@@ -369,6 +390,8 @@ useEffect(async () => {
                     </label>
                       <select
                         className="form-control"
+                        value={category}
+                        onChange={(e) => setcategory(e.target.value)}
                       >
                         <option>---Select---</option>
                         {text1.map((x)=> (
@@ -398,7 +421,7 @@ useEffect(async () => {
                     <input
                       className="form-control"
                       type="file"
-                      onChange={(e) => bucketdata(e.target.files[0])}
+                      onInput={(e) => handleFileInput(e)}
                     ></input>
                     <br></br>
                     <label className="col-md-3 col-form-label">
@@ -444,15 +467,15 @@ useEffect(async () => {
                 className="table table-striped table-bordered table-responsive"
                 style={{ width: "100%" }}
               >
-                <thead>
+                <thead style={{width: "100%"}}>
                   <tr>
-                    <th></th>
-                    <th>Guidlines</th>
-                    <th>Implementation</th>
-                    <th>Impact</th>
-                    <th>Category_Id</th>
-                    <th>Description</th>
-                    <th style={{width: "11%"}}>Actions</th>
+                    <th style={{width: "10%"}}></th>
+                    <th style={{width: "20%"}}>Guidlines</th>
+                    <th style={{width: "11%"}}>Implementation</th>
+                    <th style={{width: "11%"}}>Impact</th>
+                    <th style={{width: "11%"}}>Category_Id</th>
+                    <th style={{width: "20%"}}>Description</th>
+                    <th style={{width: "17%"}}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>

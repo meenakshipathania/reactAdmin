@@ -11,7 +11,7 @@ import { connect } from "react-redux";
 // import { useInsert } from 'react-supabase'
 import { Link, withRouter } from "react-router-dom";
 import SweetAlert from "react-bootstrap-sweetalert";
-import { decode } from 'base64-arraybuffer'
+import { decode } from "base64-arraybuffer";
 // import {
 //   MDBTable,
 //   MDBTableHead,
@@ -36,7 +36,7 @@ const TasksList = (props) => {
   const [modal, setmodal] = useState(false);
   const [EditId, setId] = useState(0);
   const [getImage, setImage] = useState(0);
-  const [dynamic_description, setdynamic_description] = useState("")
+  const [dynamic_description, setdynamic_description] = useState("");
   // const { tasks, onGetTasks } = props;
   const [text, Settext] = useState([]);
   const [Category, setCategory] = useState([]);
@@ -51,11 +51,12 @@ const TasksList = (props) => {
   const [image, setimage] = useState("");
   const [status, setstatus] = useState("");
   const [slug, setslug] = useState("");
+  const [err, Seterr] = useState(null);
 
   function removeBodyCss() {
     document.body.classList.add("no_padding");
   }
-  
+
   function tog_standard() {
     setmodal_standard(!modal_standard);
     removeBodyCss();
@@ -63,7 +64,7 @@ const TasksList = (props) => {
     setdescription(" ");
     setstatus(" ");
     setslug(" ");
-    setimage("")
+    // setimage("")
   }
 
   function tog() {
@@ -107,28 +108,24 @@ const TasksList = (props) => {
         setdescription(text[i].Description);
         setstatus(text[i].Status);
         setslug(text[i].Slug);
-        setimage(text[i].Image)
+        setimage(text[i].Image);
       }
     }
     tog();
   }
 
   async function addData() {
-    const { data, error } = await supabase
-      .from("Categories")
-      .insert([
-        {
-          Name: name,
-          Description: description,
-          Image: getImage.data.publicUrl,
-          Status: status,
-          Slug: slug,
-        },
-      ]);
+    const { data, error } = await supabase.from("Categories").insert([
+      {
+        Name: name,
+        Description: description,
+        Image: getImage.data.publicUrl,
+        Status: status,
+        Slug: slug,
+      },
+    ]);
   }
-  useEffect(async () => {
-    
-  }, []);
+  useEffect(async () => {}, []);
 
   async function updateData(id) {
     const { data, error } = await supabase
@@ -144,25 +141,37 @@ const TasksList = (props) => {
       ])
       .eq("Id", EditId);
     setUpData(upData.filter((upData) => upData.Id != id));
+
+    if (error) {
+      Seterr("could not update data");
+    }
   }
   useEffect(async () => {
     // updateData(5);
   }, []);
 
-  async function bucketdata(file){
+  async function bucketdata(file) {
     const { data, error } = await supabase.storage
-    .from('category')
-    .upload(`${file.name}`,file, decode('base64'),{ 
-      contentType: 'image/png',
-    })
-    setImage(supabase.storage.from('category').getPublicUrl(`${file.name}`))
-    // console.log(setImage)
-    // console.log(data, error);
-    // console.log(file)
+      .from("category")
+      .upload(`${file.name}`, file, decode("base64"), {
+        contentType: "image/png",
+      });
+    setImage(supabase.storage.from("category").getPublicUrl(`${file.name}`));
   }
   useEffect(async () => {
     // bucketdata()
   }, []);
+
+  async function handleFileInput(e) {
+    // handle validations
+    let file = e.target.files[0];
+    if (file.size >= 1 * 1024 * 1024) {
+      alert( "File size cannot exceed more than 1MB");
+    } else {
+      bucketdata(file);
+    }
+  }
+  // var MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
   // const recentTasks = tasks.find(task => task.title === "Recent Tasks")
 
@@ -281,6 +290,7 @@ const TasksList = (props) => {
                     <input
                       className="form-control"
                       type="file"
+                      id="file1"
                       value={image}
                       onChange={(e) => bucketdata(e.target.files[0])}
                     ></input>
@@ -364,7 +374,7 @@ const TasksList = (props) => {
                         onChange={(e) => setname(e.target.value)}
                       ></input>
                       <br></br>
-                      <label className="col-md-4 col-form-label">
+                      {/* <label className="col-md-4 col-form-label">
                         Parent Category
                       </label>
                       <select className="form-control">
@@ -373,7 +383,7 @@ const TasksList = (props) => {
                           <option value={x.Id}>{x.Name}</option>
                         ))}
                       </select>
-                      <br></br>
+                      <br></br> */}
                       <label className="col-md-3 col-form-label">
                         Description
                       </label>
@@ -387,9 +397,11 @@ const TasksList = (props) => {
                       <input
                         className="form-control"
                         type="file"
-                        onChange={(e) => bucketdata(e.target.files[0])}
+                        id="file"
+                        onInput={(e) => handleFileInput(e)}
                       ></input>
                       <br></br>
+                      {/* bucketdata(e.target.files[0]); */}
                       <label className="col-md-3 col-form-label"> Status</label>
                       <input
                         className="form-control"
@@ -397,6 +409,15 @@ const TasksList = (props) => {
                         value={status}
                         // onChange={handleChange}
                         onChange={(e) => setstatus(e.target.value)}
+                      ></input>
+                      <br></br>
+                      <br></br>
+                      <label className="col-md-3 col-form-label">Slug</label>
+                      <input
+                        className="form-control"
+                        type="text"
+                        value={slug}
+                        onChange={(e) => setslug(e.target.value)}
                       ></input>
                       <br></br>
                     </form>
@@ -435,13 +456,13 @@ const TasksList = (props) => {
               >
                 <thead>
                   <tr>
-                    <th style={{ width: "10%" }}></th>
-                    <th style={{ width: "12%" }}>Id</th>
-                    <th style={{ width: "18%" }}>Name</th>
-                    <th style={{ width: "17%" }}>Status</th>
+                    <th style={{ width: "14%" }}></th>
+                    <th style={{ width: "15%" }}>Id</th>
+                    <th style={{ width: "15%" }}>Name</th>
+                    <th style={{ width: "15%" }}>Status</th>
                     {/* <th>Image</th> */}
-                    <th style={{ width: "26%" }}>Description</th>
-                    <th style={{ width: "17%" }}>Actions</th>
+                    <th style={{ width: "30%" }}>Description</th>
+                    <th style={{ width: "107.7891px" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
