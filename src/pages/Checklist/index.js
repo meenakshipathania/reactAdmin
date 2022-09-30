@@ -26,6 +26,7 @@ import {
   Col,
   CardBody,
   Modal,
+  Button,
 } from "reactstrap";
 //Import Breadcrumb
 import Breadcrumbs from "../../components/Common/Breadcrumb";
@@ -48,6 +49,7 @@ const CheckList = (props) => {
   const [getImage, setImage] = useState(0);
   const [Category, setCategory] = useState([]);
   const [dynamic_description, setdynamic_description] = useState("")
+  const [confirm_alert, setconfirm_alert] = useState(false)
   const [upData, setUpData] = useState([]);
   const [basic, setbasic] = useState(false);
   const [basic1, setbasic1] = useState(false);
@@ -73,7 +75,7 @@ const CheckList = (props) => {
     setimplementation("");
     setimpact("");
     setdescription("");
-    setimage("")
+    // setimage("")
   }
 
   function tog() {
@@ -189,19 +191,37 @@ async function handleFileInput(e) {
     bucketdata(file);
   }
 }
-
-function getOption() {
-  let selectElement = document.querySelector('#select');
-  let output = selectElement.value;
-  // document.querySelector('.output').textContent = output;
-  console.log(output)
-}
   return (
     <>
       <div className="page-content">
         <Breadcrumbs title="Tasks" breadcrumbItem="Task List" />
         {/* Render Breadcrumbs */}
 
+      {text.map((x =>
+        <Col xl="3" lg="4" sm="6" className="mb-2">
+                  {confirm_alert ? (
+                    <SweetAlert
+                      title="Are you sure?"
+                      warning
+                      showCancel
+                      confirmButtonText="Yes, delete it!"
+                      confirmBtnBsStyle="success"
+                      cancelBtnBsStyle="danger"
+                      onConfirm={() => {
+                        setconfirm_alert(false)
+                        setsuccess_dlg(true)
+                        setdynamic_title("Deleted")
+                        setdynamic_description("Your file has been deleted.")
+                        deleteData(x.Id);
+                        handleClick();
+                      }}
+                      onCancel={() => setconfirm_alert(false)}
+                    >
+                      You won't be able to revert this!
+                    </SweetAlert>
+                  ) : null}
+                </Col>
+          ))}
         {success_dlg ? (
           <SweetAlert
             success
@@ -421,6 +441,7 @@ function getOption() {
                     <input
                       className="form-control"
                       type="file"
+                      id="file"
                       onInput={(e) => handleFileInput(e)}
                     ></input>
                     <br></br>
@@ -508,7 +529,8 @@ function getOption() {
                           color="link"
                           rounded="true"
                           size="sm"
-                          onClick={() => {deleteData(x.Id); setbasic2(true);}}
+                          id="sa-success"
+                          onClick={() => {setconfirm_alert(true);}}
                         >
                           <i className="fas fa-trash"></i>
                         </button>
@@ -546,16 +568,6 @@ function getOption() {
               }}
             />
           ) : null}
-
-          {basic2 ? (
-            <SweetAlert
-              title="Your Entry is Deleted Successfully!!!"
-              onConfirm={() => {
-                setbasic2(false); handleClick();
-              }}
-            />
-          ) : null}
-
         </Row>
       </div>
     </>

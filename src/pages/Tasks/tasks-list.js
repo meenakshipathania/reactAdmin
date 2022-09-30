@@ -37,6 +37,8 @@ const TasksList = (props) => {
   const [EditId, setId] = useState(0);
   const [getImage, setImage] = useState(0);
   const [dynamic_description, setdynamic_description] = useState("");
+  const [confirm_alert, setconfirm_alert] = useState(false)
+  const [dynamic_title, setdynamic_title] = useState("")
   // const { tasks, onGetTasks } = props;
   const [text, Settext] = useState([]);
   const [Category, setCategory] = useState([]);
@@ -125,7 +127,9 @@ const TasksList = (props) => {
       },
     ]);
   }
-  useEffect(async () => {}, []);
+  useEffect(async () => {
+
+  }, []);
 
   async function updateData(id) {
     const { data, error } = await supabase
@@ -180,11 +184,35 @@ const TasksList = (props) => {
       <div className="page-content">
         <Breadcrumbs title="Tasks" breadcrumbItem="Task List" />
         {/* Render Breadcrumbs */}
-
+        {text.map((x =>
+        <Col xl="3" lg="4" sm="6" className="mb-2">
+                  {confirm_alert ? (
+                    <SweetAlert
+                      title="Are you sure?"
+                      warning
+                      showCancel
+                      confirmButtonText="Yes, delete it!"
+                      confirmBtnBsStyle="success"
+                      cancelBtnBsStyle="danger"
+                      onConfirm={() => {
+                        setconfirm_alert(false)
+                        setsuccess_dlg(true)
+                        setdynamic_title("Deleted")
+                        setdynamic_description("Your file has been deleted.")
+                        deleteData(x.Id);
+                        handleClick();
+                      }}
+                      onCancel={() => setconfirm_alert(false)}
+                    >
+                      You won't be able to revert this!
+                    </SweetAlert>
+                  ) : null}
+                </Col>
+          ))}
         {success_dlg ? (
           <SweetAlert
             success
-            title={dynamic_title1}
+            title={dynamic_title}
             onConfirm={() => {
               setsuccess_dlg(false);
             }}
@@ -290,9 +318,9 @@ const TasksList = (props) => {
                     <input
                       className="form-control"
                       type="file"
-                      id="file1"
-                      value={image}
-                      onChange={(e) => bucketdata(e.target.files[0])}
+                      // id="file1"
+                      // value={}
+                      onChange={(e) => handleFileInput(e)}
                     ></input>
                     <br></br>
                     <label className="col-md-3 col-form-label"> Status</label>
@@ -495,9 +523,9 @@ const TasksList = (props) => {
                           color="link"
                           rounded="true"
                           size="sm"
+                          id="sa-success"
                           onClick={() => {
-                            deleteData(x.Id);
-                            setbasic2(true);
+                            setconfirm_alert(true);
                           }}
                         >
                           <i className="fas fa-trash"></i>
@@ -538,16 +566,6 @@ const TasksList = (props) => {
               }}
             />
           ) : null}
-          {basic2 ? (
-            <SweetAlert
-              title="Your Entry is Deleted Successfully!!!"
-              onConfirm={() => {
-                setbasic2(false);
-                handleClick();
-              }}
-            />
-          ) : null}
-
           {/* 
             <Col lg={4}>
               <Card>
